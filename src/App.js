@@ -20,35 +20,44 @@ class App extends Component {
       score: MAXSCORE,
       word: PAIRS[life].word,
       hint: PAIRS[life].hint,
-      leftToGuess: PAIRS[life].word.length,
-      numLetToOpen: NUMLETTOOPEN,
+      numLetToOpen: NUMLETTOOPEN, // hint to open letters when score is below 70
       gameOver: false
     }
   }
   
   // Enables selecting letter and changing letterStatus
   selectLetter = (selectedLetter) => {
-    if (!this.state.gameOver) { // Letters are only active until game is over
+    if (!this.state.gameOver) {  // When game is over, function returns nothing 
       let letterStatus = { ...this.state.letterStatus }
-
       if (!letterStatus[selectedLetter]) {
         letterStatus[selectedLetter] = true
-        this.setState({ letterStatus })
-        this.updateScore(selectedLetter)
+        this.updateScore(selectedLetter, letterStatus)
       }
     }
   }
 
-  updateScore(selectedLetter) {
-    let { score, leftToGuess, numLetToOpen, gameOver } = this.state
+  updateScore(selectedLetter, letterStatus) {
+    console.log(this.state.letterStatus)
+    let { score, numLetToOpen, gameOver } = this.state
     let num = countLetterInWord(selectedLetter, this.state.word)
     score += (num !== 0)? 5 * num : -20
-    leftToGuess -= num
-    if (leftToGuess === 0 || score <= 0) { 
+
+    if (!this.leftToGuess(letterStatus) || score <= 0) { 
       gameOver = true 
       numLetToOpen = 0 // won't show the button "open letter"
     }
-    this.setState({ score, leftToGuess, gameOver , numLetToOpen })
+
+    this.setState({ score, gameOver , numLetToOpen, letterStatus })
+  }
+
+  // returns true if there are still letters to guess
+  leftToGuess(letterStatus) {
+    for (let l of this.state.word) { 
+      if (!letterStatus[l]) {
+        return true 
+      }
+    }
+    return false
   }
 
   // Starts new game (new life)
@@ -63,8 +72,8 @@ class App extends Component {
     let numLetToOpen = this.state.numLetToOpen - 1
     let randomLetter = this.getRandomLetter()
     letterStatus[randomLetter] = true
-    this.updateLeftToGuess(randomLetter)
-    this.setState({ letterStatus, numLetToOpen })
+    let gameOver = this.leftToGuess(letterStatus) ? false : true 
+    this.setState({ letterStatus, numLetToOpen, gameOver })
   }
 
   // helper for openLetter func
@@ -79,19 +88,11 @@ class App extends Component {
     return hiddenLetters[Math.floor(Math.random() * hiddenLetters.length)]
   }
 
-  // helper for openLetter func
-  updateLeftToGuess(letter) {
-    let { leftToGuess, gameOver } = this.state.leftToGuess
-    leftToGuess -= countLetterInWord(letter, this.state.word)
-    if (leftToGuess === 0) { gameOver = true }
-    this.setState({ leftToGuess, gameOver })
-  }
-
   render() {
     return (
       <div className="container">
-        <div>{this.state.leftToGuess === 0 ? "You won!" :
-          this.state.score <= 0 ? "You lost" : null}</div>
+        <div> {this.state.gameOver? (this.state.score > 0 ? "You won" : "You lost") : null }
+        </div>
         {(this.state.life < MAXLIFE && this.state.gameOver) ? Restart(this.restartGame) : null }
         <Score score={this.state.score} openLetter={this.openLetter} numLetToOpen={this.state.numLetToOpen} />
         <Solution letterStatus={this.state.letterStatus} word={this.state.word} hint={this.state.hint} />

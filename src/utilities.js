@@ -1,11 +1,6 @@
-import React, { Component } from 'react';
+import React from 'react';
 
 const MAXSCORE = 100
-const INITIAL_STATE = {
-  score: MAXSCORE,
-  numLetToOpen: 1,
-  gameOver: false
-}
 const PAIRS = [
   { word: "SSSNOW", hint: "WINTER" },
   { word: "BLOSSOM", hint: "SPRING" },
