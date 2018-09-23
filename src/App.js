@@ -5,7 +5,7 @@ import Letters from './components/Letters';
 import Score from './components/Score';
 import Solution from './components/Solution';
 import { generateLetterStatus, countLetterInWord , MAXSCORE, 
-  PAIRS, MAXLIFE, NUMLETTOOPEN, Restart } from './utilities';
+          PAIRS, MAXLIFE, NUMLETTOOPEN, Restart } from './utilities';
 
 class App extends Component {
   constructor() {
@@ -33,17 +33,14 @@ class App extends Component {
 
       if (!letterStatus[selectedLetter]) {
         letterStatus[selectedLetter] = true
-        this.setState({ letterStatus: letterStatus })
+        this.setState({ letterStatus })
         this.updateScore(selectedLetter)
       }
     }
   }
 
   updateScore(selectedLetter) {
-    let score = this.state.score
-    let leftToGuess = this.state.leftToGuess
-    let numLetToOpen = this.state.numLetToOpen
-    let gameOver = false 
+    let { score, leftToGuess, numLetToOpen, gameOver } = this.state
     let num = countLetterInWord(selectedLetter, this.state.word)
     score += (num !== 0)? 5 * num : -20
     leftToGuess -= num
@@ -51,8 +48,7 @@ class App extends Component {
       gameOver = true 
       numLetToOpen = 0 // won't show the button "open letter"
     }
-    this.setState({ score: score, leftToGuess: leftToGuess, 
-      gameOver: gameOver , numLetToOpen: numLetToOpen })
+    this.setState({ score, leftToGuess, gameOver , numLetToOpen })
   }
 
   // Starts new game (new life)
@@ -64,11 +60,11 @@ class App extends Component {
   // Opens random unguessed letter in word
   openLetter = () => {
     let letterStatus = { ...this.state.letterStatus }
-    let numLetToOpen = this.state.numLetToOpen
+    let numLetToOpen = this.state.numLetToOpen - 1
     let randomLetter = this.getRandomLetter()
     letterStatus[randomLetter] = true
     this.updateLeftToGuess(randomLetter)
-    this.setState({ letterStatus: letterStatus, numLetToOpen: numLetToOpen - 1 })
+    this.setState({ letterStatus, numLetToOpen })
   }
 
   // helper for openLetter func
@@ -85,18 +81,17 @@ class App extends Component {
 
   // helper for openLetter func
   updateLeftToGuess(letter) {
-    let leftToGuess = this.state.leftToGuess
-    let gameOver = false
+    let { leftToGuess, gameOver } = this.state.leftToGuess
     leftToGuess -= countLetterInWord(letter, this.state.word)
     if (leftToGuess === 0) { gameOver = true }
-    this.setState({ leftToGuess: leftToGuess, gameOver: gameOver })
+    this.setState({ leftToGuess, gameOver })
   }
 
   render() {
     return (
       <div className="container">
         <div>{this.state.leftToGuess === 0 ? "You won!" :
-          this.state.score < 1 ? "You lost" : null}</div>
+          this.state.score <= 0 ? "You lost" : null}</div>
         {(this.state.life < MAXLIFE && this.state.gameOver) ? Restart(this.restartGame) : null }
         <Score score={this.state.score} openLetter={this.openLetter} numLetToOpen={this.state.numLetToOpen} />
         <Solution letterStatus={this.state.letterStatus} word={this.state.word} hint={this.state.hint} />
